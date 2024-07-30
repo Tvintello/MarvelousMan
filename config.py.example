@@ -1,5 +1,8 @@
 import discord
 
+TOKEN: str = "token"
+APP_ID: str = "application id"
+
 # Colors
 COLOR_RED = discord.Colour.red()
 COLOR_BLUE = discord.Colour.blue()
