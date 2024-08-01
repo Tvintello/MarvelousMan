@@ -7,6 +7,7 @@ class AdminCog(commands.Cog):
         self.bot = bot
 
     @discord.slash_command(description="Удаляет историю канала, можно настроить чьи сообщения удалить")
+    @commands.has_permissions(administrator=True)
     async def clear(self, ctx: discord.commands.context.ApplicationContext, whose: str = "all", limit=100):
         if whose == "all":
             length = len(await ctx.channel.purge(limit=int(limit)))
@@ -29,6 +30,7 @@ class AdminCog(commands.Cog):
         return message.author == member
 
     @discord.slash_command(description="Мутит участника")
+    @commands.has_permissions(administrator=True)
     async def mute(self, ctx: discord.commands.context.ApplicationContext, member: discord.Member):
         for role in await self.bot.guilds[0].fetch_roles():
             if role.name == "Замученный":
@@ -39,6 +41,7 @@ class AdminCog(commands.Cog):
         await ctx.respond()
 
     @discord.slash_command(description="Убирает мут с участника")
+    @commands.has_permissions(administrator=True)
     async def unmute(self, ctx: discord.commands.context.ApplicationContext, member: discord.Member):
         for role in await self.bot.guilds[0].fetch_roles():
             if role.name == "Приличный":

@@ -114,7 +114,7 @@ def run():
         muted = discord.Permissions.none()
         muted.update(view_channel=True)
         await setup_role("Замученный", muted, COLOR_RED)
-        unmuted = discord.Permissions.general()
+        unmuted = discord.Permissions.all_channel()
         await setup_role("Приличный", unmuted, COLOR_GREEN)
 
         for role in await bot.guilds[0].fetch_roles():
