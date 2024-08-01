@@ -1,9 +1,10 @@
 import discord
 
 from config import TOKEN, PREFIX, COLOR_RED, COLOR_GREEN
-from censure import Censor
+from censure import Censor  # https://github.com/Priler/samurai/tree/main/censure
 from scripts.support import get_json
 from random import choice
+from typing import Callable
 import asyncio
 
 censor_ru = Censor.get(lang="ru")
@@ -40,7 +41,7 @@ def run():
             permissions=permissions
         )
 
-    async def set_timer(ctx, time_input, func):
+    async def set_timer(ctx, time_input, func: Callable):
         try:
             time = int(time_input)
         except ValueError:
@@ -59,7 +60,7 @@ def run():
                 break
 
     @bot.command()
-    async def set_timer(ctx, time_input):
+    async def set_timer(ctx, time_input, end_message: str = "Таймер истек!"):
 
         # TODO: таймер в отдельный класс, чтобы каждый участник мог ставить свой таймер и останавливать его
 
@@ -94,7 +95,7 @@ def run():
                     elif time < 60:
                         await message.edit(content=f"Таймер: {time} секунд")
                     if time <= 0:
-                        await message.edit(content=f"{ctx.author.mention} Таймер истек!")
+                        await message.edit(content=f"{ctx.author.mention} {end_message}")
                         break
                 except Exception:
                     break
@@ -102,9 +103,13 @@ def run():
             await ctx.respond(f"Че это вообще такое **{time_input}**, формулируй нормально, я ничего не понял")
 
     @bot.event
+    async def on_connect():
+        bot.load_extension("cogs.admin_cog")
+        await bot.sync_commands()
+
+    @bot.event
     async def on_ready():
         global mute_role
-        bot.load_extension("cogs.admin_cog")
 
         muted = discord.Permissions.none()
         muted.update(view_channel=True)
