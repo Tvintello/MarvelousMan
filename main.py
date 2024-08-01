@@ -42,41 +42,67 @@ def run():
             permissions=permissions
         )
 
-    async def set_timer(ctx, timeInput):
+    async def set_timer(ctx, time_input):
         try:
-            time = int(timeInput)
+            time = int(time_input)
         except:
-            convertTimeList = {'s': 1, 'm': 60, 'h': 3600, 'd': 86400, 'S': 1, 'M': 60, 'H': 3600, 'D': 86400}
-            time = int(timeInput[:-1]) * convertTimeList[timeInput[-1]]
-        if time > 86400:
-            await ctx.send("I can\'t do timers over a day long")
-            return
-        if time <= 0:
-            await ctx.send("Timers don\'t go into negatives :/")
-            return
-        if time >= 3600:
-            message = await ctx.send(f"Timer: {time // 3600} hours {time % 3600 // 60} minutes {time % 60} seconds")
-        elif time >= 60:
-            message = await ctx.send(f"Timer: {time // 60} minutes {time % 60} seconds")
-        elif time < 60:
-            message = await ctx.send(f"Timer: {time} seconds")
+            convert_time_list = {'s': 1, 'm': 60, 'h': 3600, 'd': 86400, 'S': 1, 'M': 60, 'H': 3600, 'D': 86400}
+            time = int(time_input[:-1]) * convert_time_list[time_input[-1]]
         while True:
             try:
                 await asyncio.sleep(5)
                 time -= 5
-                if time >= 3600:
-                    await message.edit(
-                        content=f"Timer: {time // 3600} hours {time % 3600 // 60} minutes {time % 60} seconds")
-                elif time >= 60:
-                    await message.edit(content=f"Timer: {time // 60} minutes {time % 60} seconds")
-                elif time < 60:
-                    await message.edit(content=f"Timer: {time} seconds")
                 if time <= 0:
-                    await message.edit(content="Ended!")
-                    await ctx.send(f"{ctx.author.mention} Your countdown Has ended!")
+                    await ctx.send(f"{ctx.author.mention} Твой срок истек, теперь ты можешь опять засорять нам чат!")
+                    await ctx.respond(choice(phrases["on_mute_end"]))
                     break
             except:
                 break
+
+    @bot.command()
+    async def set_timer(ctx, time_input):
+
+        # TODO: таймер в отдельный класс, чтобы каждый участник мог ставить свой таймер и останавливать его
+
+        try:
+            try:
+                time = int(time_input)
+            except ValueError:
+                print(time_input)
+                convert_time_list = {'s': 1, 'm': 60, 'h': 3600, 'd': 86400, 'S': 1, 'M': 60, 'H': 3600, 'D': 86400}
+                time = int(time_input[:-1]) * convert_time_list[time_input[-1]]
+                print(time)
+            if time > 86400:
+                await ctx.respond("Я не могу считать дольше чем 24 часа, пожалей меня, "
+                                  "попробуй так же 100 тысяч секунд считать, посмотрим на тебя после этого")
+                return
+            if time <= 0:
+                await ctx.respond("Время не может быть отрицательным. Тебя этому в школе не учили что ли?")
+                return
+            if time >= 3600:
+                message = await ctx.respond(f"Таймер: {time // 3600} часов {time % 3600 // 60} минут {time % 60} секунд")
+            elif time >= 60:
+                message = await ctx.respond(f"Таймер: {time // 60} минут {time % 60} секунд")
+            else:
+                message = await ctx.respond(f"Таймер: {time} секунд")
+            while True:
+                try:
+                    await asyncio.sleep(5)
+                    time -= 5
+                    if time >= 3600:
+                        await message.edit(
+                            content=f"Таймер: {time // 3600} часов {time % 3600 // 60} минут {time % 60} секунд")
+                    elif time >= 60:
+                        await message.edit(content=f"Таймер: {time // 60} минут {time % 60} секунд")
+                    elif time < 60:
+                        await message.edit(content=f"Таймер: {time} секунд")
+                    if time <= 0:
+                        await message.edit(content=f"{ctx.author.mention} Таймер истек!")
+                        break
+                except Exception:
+                    break
+        except ValueError:
+            await ctx.respond(f"Че это вообще такое **{time_input}**, формулируй нормально, я ничего не понял")
 
     @bot.event
     async def on_ready():
