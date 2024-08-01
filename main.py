@@ -1,6 +1,6 @@
 import discord
 
-from config import TOKEN, PREFIX, COLOR_RED
+from config import TOKEN, PREFIX, COLOR_RED, COLOR_GREEN
 from censure import Censor
 from scripts.support import get_json
 from random import choice
@@ -22,9 +22,9 @@ def get_profanity(text):
 def run():
     intents = discord.Intents.default()
     intents.message_content = True
-    bot = discord.Bot(intents=intents)
+    bot = discord.Bot(intents=intents, prefix=PREFIX)
 
-    async def setup_role(role_name):
+    async def setup_role(role_name, permissions, color):
         exists = False
         for role in await bot.guilds[0].fetch_roles():
             if role.name == role_name:
@@ -33,19 +33,17 @@ def run():
         if exists:
             return
 
-        permissions = discord.Permissions.none()
-        permissions.update(view_channel=True)
         await bot.guilds[0].create_role(
             name=role_name,
-            color=COLOR_RED,
+            color=color,
             hoist=True,
             permissions=permissions
         )
 
-    async def set_timer(ctx, time_input):
+    async def set_timer(ctx, time_input, func):
         try:
             time = int(time_input)
-        except:
+        except ValueError:
             convert_time_list = {'s': 1, 'm': 60, 'h': 3600, 'd': 86400, 'S': 1, 'M': 60, 'H': 3600, 'D': 86400}
             time = int(time_input[:-1]) * convert_time_list[time_input[-1]]
         while True:
@@ -53,10 +51,11 @@ def run():
                 await asyncio.sleep(5)
                 time -= 5
                 if time <= 0:
+                    await func()
                     await ctx.send(f"{ctx.author.mention} Твой срок истек, теперь ты можешь опять засорять нам чат!")
                     await ctx.respond(choice(phrases["on_mute_end"]))
                     break
-            except:
+            except Exception:
                 break
 
     @bot.command()
@@ -68,10 +67,8 @@ def run():
             try:
                 time = int(time_input)
             except ValueError:
-                print(time_input)
                 convert_time_list = {'s': 1, 'm': 60, 'h': 3600, 'd': 86400, 'S': 1, 'M': 60, 'H': 3600, 'D': 86400}
                 time = int(time_input[:-1]) * convert_time_list[time_input[-1]]
-                print(time)
             if time > 86400:
                 await ctx.respond("Я не могу считать дольше чем 24 часа, пожалей меня, "
                                   "попробуй так же 100 тысяч секунд считать, посмотрим на тебя после этого")
@@ -107,11 +104,20 @@ def run():
     @bot.event
     async def on_ready():
         global mute_role
-        await setup_role("Замученный")
+        bot.load_extension("cogs.admin_cog")
+
+        muted = discord.Permissions.none()
+        muted.update(view_channel=True)
+        await setup_role("Замученный", muted, COLOR_RED)
+        unmuted = discord.Permissions.general()
+        await setup_role("Приличный", unmuted, COLOR_GREEN)
+
         for role in await bot.guilds[0].fetch_roles():
             if role.name == "Замученный":
                 mute_role = role
-                break
+            elif role.name == "Приличный":
+                for member in bot.guilds[0].members:
+                    await member.add_roles()
 
     @bot.event
     async def on_message(message: discord.Message) -> None:
@@ -122,6 +128,10 @@ def run():
             bad_counter[message.author] = bad_counter.setdefault(message.author, 0) + 1
             await message.channel.send(choice(phrases["on_swear"]))
             if bad_counter[message.author] >= 3:
+                for role in message.author.roles:
+                    if not role.name == "@everyone":
+                        await message.author.remove_roles(role)
+
                 await message.author.add_roles(mute_role)
                 await message.channel.send(choice(phrases["on_mute"]))
             return
@@ -129,7 +139,7 @@ def run():
             await message.channel.send(message.content)
 
     @bot.command()
-    async def say(ctx, message):
+    async def say(ctx: discord.commands.context.ApplicationContext, message):
         await ctx.respond(message)
 
     @bot.command()
