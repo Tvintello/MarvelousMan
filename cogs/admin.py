@@ -29,26 +29,11 @@ class AdminCog(commands.Cog):
     def is_member(self, message, member) -> bool:
         return message.author == member
 
-    @discord.slash_command(description="Мутит участника")
-    @commands.has_permissions(administrator=True)
-    async def mute(self, ctx: discord.commands.context.ApplicationContext, member: discord.Member):
-        for role in await self.bot.guilds[0].fetch_roles():
-            if role.name == "Замученный":
-                await member.add_roles(role)
-            elif not role.name == "@everyone":
-                await member.remove_roles(role)
-
-        await ctx.respond()
-
     @discord.slash_command(description="Убирает мут с участника")
     @commands.has_permissions(administrator=True)
-    async def unmute(self, ctx: discord.commands.context.ApplicationContext, member: discord.Member):
-        for role in await self.bot.guilds[0].fetch_roles():
-            if role.name == "Приличный":
-                await member.add_roles(role)
-            elif not role.name == "@everyone":
-                await member.remove_roles(role)
-        await ctx.respond()
+    async def remove_timeout(self, ctx: discord.commands.context.ApplicationContext, member: discord.Member, reason=""):
+        await member.remove_timeout(reason=reason)
+        await ctx.respond(f"С {member} снят мут в текстовых каналах")
 
 
 def setup(bot: discord.ext.commands.Bot):

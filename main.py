@@ -1,15 +1,15 @@
 import discord
 
-from config import TOKEN, PREFIX, COLOR_RED, COLOR_GREEN
+from config import TOKEN, PREFIX, COLOR_RED, COLOR_GREEN, DECENT
 from censure import Censor  # https://github.com/Priler/samurai/tree/main/censure
-from scripts.support import get_json
+from scripts.support import get_json, load_gif_from_tenor
 from random import choice
 from typing import Callable
+from datetime import timedelta
 import asyncio
 
 censor_ru = Censor.get(lang="ru")
 phrases = get_json("scripts/phrases.json")
-mute_role = discord.abc.Snowflake
 
 bad_counter = {}
 say_counter = {}
@@ -78,22 +78,22 @@ def run():
                 await ctx.respond("Время не может быть отрицательным. Тебя этому в школе не учили что ли?")
                 return
             if time >= 3600:
-                message = await ctx.respond(f"Таймер: {time // 3600} часов {time % 3600 // 60} минут {time % 60} секунд")
+                message = await ctx.respond(f"Таймер {ctx.author}: {time // 3600} часов {time % 3600 // 60} минут {time % 60} секунд")
             elif time >= 60:
-                message = await ctx.respond(f"Таймер: {time // 60} минут {time % 60} секунд")
+                message = await ctx.respond(f"Таймер {ctx.author}: {time // 60} минут {time % 60} секунд")
             else:
-                message = await ctx.respond(f"Таймер: {time} секунд")
+                message = await ctx.respond(f"Таймер {ctx.author}: {time} секунд")
             while True:
                 try:
                     await asyncio.sleep(5)
                     time -= 5
                     if time >= 3600:
                         await message.edit(
-                            content=f"Таймер: {time // 3600} часов {time % 3600 // 60} минут {time % 60} секунд")
+                            content=f"Таймер {ctx.author}: {time // 3600} часов {time % 3600 // 60} минут {time % 60} секунд")
                     elif time >= 60:
-                        await message.edit(content=f"Таймер: {time // 60} минут {time % 60} секунд")
+                        await message.edit(content=f"Таймер {ctx.author}: {time // 60} минут {time % 60} секунд")
                     elif time < 60:
-                        await message.edit(content=f"Таймер: {time} секунд")
+                        await message.edit(content=f"Таймер {ctx.author}: {time} секунд")
                     if time <= 0:
                         await message.edit(content=f"{ctx.author.mention} {end_message}")
                         break
@@ -104,25 +104,24 @@ def run():
 
     @bot.event
     async def on_connect():
-        bot.load_extension("cogs.admin_cog")
+        bot.load_extension("cogs.admin")
+        bot.load_extension("cogs.user")
         await bot.sync_commands()
 
     @bot.event
     async def on_ready():
         global mute_role
 
-        muted = discord.Permissions.none()
-        muted.update(view_channel=True)
-        await setup_role("Замученный", muted, COLOR_RED)
-        unmuted = discord.Permissions.all_channel()
-        await setup_role("Приличный", unmuted, COLOR_GREEN)
+        await setup_role("Приличный", DECENT, COLOR_GREEN)
 
         for role in await bot.guilds[0].fetch_roles():
-            if role.name == "Замученный":
-                mute_role = role
-            elif role.name == "Приличный":
+            if role.name == "Приличный":
                 for member in bot.guilds[0].members:
                     await member.add_roles()
+
+    @bot.event
+    async def on_timeout(member):
+        print(member)
 
     @bot.event
     async def on_message(message: discord.Message) -> None:
@@ -133,11 +132,9 @@ def run():
             bad_counter[message.author] = bad_counter.setdefault(message.author, 0) + 1
             await message.channel.send(choice(phrases["on_swear"]))
             if bad_counter[message.author] >= 3:
-                for role in message.author.roles:
-                    if not role.name == "@everyone":
-                        await message.author.remove_roles(role)
-
-                await message.author.add_roles(mute_role)
+                await message.author.timeout_for(timedelta(minutes=5 * (bad_counter[message.author] - 2)))
+                # if bad_counter[message.author] >= 12:
+                #     await message.channel.send("/tenor query: гигачад")
                 await message.channel.send(choice(phrases["on_mute"]))
             return
         elif not message.content.startswith("/"):
