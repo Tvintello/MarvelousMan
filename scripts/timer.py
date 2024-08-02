@@ -1,7 +1,6 @@
 from typing import Callable
 from datetime import timedelta
-from threading import Thread
-from time import sleep
+import asyncio
 
 
 class Timer:
@@ -10,24 +9,23 @@ class Timer:
         self.is_running = False
         self.start_time = time_input
         self.time = self.start_time
-        self.thread = None
+        self.loop = asyncio.get_running_loop()
+        self.task = None
 
     async def start(self):
         self.is_running = True
-        self.thread = Thread(target=self.update)
-        self.thread.start()
+        self.task = self.loop.create_task(self.update())
 
-    def update(self):
-        print(self.is_running)
+    async def update(self):
         second = timedelta(seconds=1)
         zero = timedelta(seconds=0)
         while self.is_running:
             try:
-                sleep(1)
+                await asyncio.sleep(1)
                 self.time -= second
                 if self.time <= zero:
                     self.is_running = False
-                    self.func()
+                    await self.func()
                     break
             except Exception:
                 return
