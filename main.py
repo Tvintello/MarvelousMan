@@ -2,17 +2,22 @@ import discord
 
 from config import TOKEN, PREFIX, COLOR_RED, COLOR_GREEN, DECENT
 from censure import Censor  # https://github.com/Priler/samurai/tree/main/censure
-from scripts.support import get_json, load_gif_from_tenor
+from scripts.support import get_json
 from random import choice
-from typing import Callable
 from datetime import timedelta
-import asyncio
+from scripts.timer import Timer
 
 censor_ru = Censor.get(lang="ru")
 phrases = get_json("scripts/phrases.json")
 
 bad_counter = {}
+user_backend_timers = {}
 say_counter = {}
+
+
+def reset_bad_counter(member: discord.Member):
+    bad_counter[member] = 0
+    print(f"RESET BAD COUNTER: {bad_counter}")
 
 
 def get_profanity(text):
@@ -41,71 +46,11 @@ def run():
             permissions=permissions
         )
 
-    async def set_timer(ctx, time_input, func: Callable):
-        try:
-            time = int(time_input)
-        except ValueError:
-            convert_time_list = {'s': 1, 'm': 60, 'h': 3600, 'd': 86400, 'S': 1, 'M': 60, 'H': 3600, 'D': 86400}
-            time = int(time_input[:-1]) * convert_time_list[time_input[-1]]
-        while True:
-            try:
-                await asyncio.sleep(5)
-                time -= 5
-                if time <= 0:
-                    await func()
-                    await ctx.send(f"{ctx.author.mention} Твой срок истек, теперь ты можешь опять засорять нам чат!")
-                    await ctx.respond(choice(phrases["on_mute_end"]))
-                    break
-            except Exception:
-                break
-
-    @bot.command()
-    async def set_timer(ctx, time_input, end_message: str = "Таймер истек!"):
-
-        # TODO: таймер в отдельный класс, чтобы каждый участник мог ставить свой таймер и останавливать его
-
-        try:
-            try:
-                time = int(time_input)
-            except ValueError:
-                convert_time_list = {'s': 1, 'm': 60, 'h': 3600, 'd': 86400, 'S': 1, 'M': 60, 'H': 3600, 'D': 86400}
-                time = int(time_input[:-1]) * convert_time_list[time_input[-1]]
-            if time > 86400:
-                await ctx.respond("Я не могу считать дольше чем 24 часа, пожалей меня, "
-                                  "попробуй так же 100 тысяч секунд считать, посмотрим на тебя после этого")
-                return
-            if time <= 0:
-                await ctx.respond("Время не может быть отрицательным. Тебя этому в школе не учили что ли?")
-                return
-            if time >= 3600:
-                message = await ctx.respond(f"Таймер {ctx.author}: {time // 3600} часов {time % 3600 // 60} минут {time % 60} секунд")
-            elif time >= 60:
-                message = await ctx.respond(f"Таймер {ctx.author}: {time // 60} минут {time % 60} секунд")
-            else:
-                message = await ctx.respond(f"Таймер {ctx.author}: {time} секунд")
-            while True:
-                try:
-                    await asyncio.sleep(5)
-                    time -= 5
-                    if time >= 3600:
-                        await message.edit(
-                            content=f"Таймер {ctx.author}: {time // 3600} часов {time % 3600 // 60} минут {time % 60} секунд")
-                    elif time >= 60:
-                        await message.edit(content=f"Таймер {ctx.author}: {time // 60} минут {time % 60} секунд")
-                    elif time < 60:
-                        await message.edit(content=f"Таймер {ctx.author}: {time} секунд")
-                    if time <= 0:
-                        await message.edit(content=f"{ctx.author.mention} {end_message}")
-                        break
-                except Exception:
-                    break
-        except ValueError:
-            await ctx.respond(f"Че это вообще такое **{time_input}**, формулируй нормально, я ничего не понял")
-
     @bot.event
     async def on_connect():
         bot.load_extension("cogs.admin")
         bot.load_extension("cogs.user")
+        bot.load_extension("cogs.timer")
         await bot.sync_commands()
 
     @bot.event
@@ -127,6 +72,7 @@ def run():
     async def on_message(message: discord.Message) -> None:
         if message.author == bot.user:
             return
+        print(bad_counter)
 
         if get_profanity(message.content):
             bad_counter[message.author] = bad_counter.setdefault(message.author, 0) + 1
@@ -136,6 +82,9 @@ def run():
                 # if bad_counter[message.author] >= 12:
                 #     await message.channel.send("/tenor query: гигачад")
                 await message.channel.send(choice(phrases["on_mute"]))
+                user_backend_timers[message.author] = Timer(timedelta(hours=(bad_counter[message.author] - 2)),
+                                                                      lambda: reset_bad_counter(message.author))
+                await user_backend_timers[message.author].start()
             return
         elif not message.content.startswith("/"):
             await message.channel.send(message.content)
@@ -152,8 +101,10 @@ def run():
                     await ctx.respond(user.avatar)
                     break
             else:
-                if ctx.message.author.name.lower() == user_name.lower():
+                if ctx.user.name.lower() == user_name.lower():
                     await ctx.respond(ctx.user.avatar)
+                else:
+                    await ctx.respond("Нет такого участника, ты че то попутал")
         else:
             await ctx.respond(ctx.user.avatar)
 
