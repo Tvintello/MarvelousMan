@@ -13,8 +13,6 @@ class TimerCog(commands.Cog):
     @discord.slash_command(description="Ставит таймер, можно определить сообщение, "
                                        "которое будет показываться по окончанию таймера")
     async def set_timer(self, ctx, time_input, end_message: str = "Таймер истек!"):
-        # TODO: таймер в отдельный класс, чтобы каждый участник мог ставить свой таймер и останавливать его
-
         try:
             try:
                 time = int(time_input)

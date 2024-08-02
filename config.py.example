@@ -12,3 +12,10 @@ COLOR_YELLOW = discord.Colour.yellow()
 COLOR_DISCORD = discord.Colour(0x36393E)
 
 PREFIX: str = "$"
+
+DECENT = discord.Permissions.all_channel()
+DECENT.update(manage_roles=False, manage_channels=False, create_expressions=True, manage_expressions=True,
+              manage_webhooks=False, change_nickname=True, manage_messages=False, manage_threads=False,
+              use_soundboard=True, priority_speaker=False, mute_members=False, deafen_members=False,
+              move_members=False, use_activities=True, create_events=True)
+
