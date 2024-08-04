@@ -4,6 +4,7 @@ from scripts.timer import Timer
 from random import choice
 from scripts.support import get_json
 from scripts.role_manager import RoleManager
+from config import BAD_ROLE, GOOD_ROLE
 
 
 phrases = get_json("./phrases.json")
@@ -35,23 +36,23 @@ class GeneralFunctions:
         elif not self.timers[message.author]:
             self.timers[message.author] = {}
 
-    async def retrieve_reputation(self, member: discord.Member, good_role_name: str):
+    async def retrieve_reputation(self, member: discord.Member):
         self.bad_counter[member] = 0
-        await self.role_manager.set_role(member, good_role_name)
+        await self.role_manager.set_role(member, GOOD_ROLE)
         print(f"RESET BAD COUNTER: {self.bad_counter}")
 
-    async def decrease_reputation(self, message, duration):
+    async def decrease_reputation(self, duration, user):
         async def launch_retrieve_reputation():
-            await self.retrieve_reputation(message.author, "Приличный")
+            await self.retrieve_reputation(user)
 
-        if self.timers.get(message.author) and self.timers[message.author].get("reputation"):
-            await self.timers[message.author]["reputation"].stop()
+        if self.timers.get(user) and self.timers[user].get("reputation"):
+            await self.timers[user]["reputation"].stop()
         else:
-            self.timers[message.author] = {}
+            self.timers[user] = {}
 
-        await self.role_manager.set_role(message.author, "Невоспитанный")
-        self.timers[message.author]["reputation"] = Timer(duration, launch_retrieve_reputation)
-        await self.timers[message.author]["reputation"].start()
+        await self.role_manager.set_role(user, BAD_ROLE)
+        self.timers[user]["reputation"] = Timer(duration, launch_retrieve_reputation)
+        await self.timers[user]["reputation"].start()
 
 
 def setup(bot):

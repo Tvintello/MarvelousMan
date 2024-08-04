@@ -1,10 +1,9 @@
 import discord
 
-from config import TOKEN, PREFIX, COLOR_GREEN
+from config import TOKEN, PREFIX, BAD_REPUTATION_DURATION, SWEAR_MUTE_DURATION, SWEAR_THRESHOLD, GOOD_ROLE
 from censure import Censor  # https://github.com/Priler/samurai/tree/main/censure
 from scripts.role_manager import RoleManager
 from scripts.general import GeneralFunctions
-from datetime import timedelta
 
 censor_ru = Censor.get(lang="ru")
 
@@ -31,7 +30,7 @@ def run():
         await role_manager.setup_roles()
 
         for role in await bot.guilds[0].fetch_roles():
-            if role.name == "Приличный":
+            if role.name == GOOD_ROLE:
                 for member in bot.guilds[0].members:
                     await member.add_roles()
 
@@ -42,16 +41,15 @@ def run():
 
         if get_profanity(message.content):
             await funcs.on_swear(message)
-            if funcs.bad_counter[message.author] >= 3:
-                await funcs.decrease_reputation(message, timedelta(hours=2 * (funcs.bad_counter[message.author] - 2)))
-                await funcs.mute_member(message, timedelta(minutes=30 * (funcs.bad_counter[message.author] - 2)))
+            if funcs.bad_counter[message.author] >= SWEAR_THRESHOLD:
+                await funcs.decrease_reputation(BAD_REPUTATION_DURATION * (funcs.bad_counter[message.author] - 2),
+                                                message.author)
+                await funcs.mute_member(message, SWEAR_MUTE_DURATION * (funcs.bad_counter[message.author] - 2))
             return
-        elif not message.content.startswith("/"):
-            await message.channel.send(message.content)
 
     @bot.event
     async def on_member_join(member: discord.Member):
-        await member.add_roles(discord.utils.get(bot.guilds[0].roles, name="Приличный"))
+        await member.add_roles(discord.utils.get(bot.guilds[0].roles, name=GOOD_ROLE))
 
     bot.run(TOKEN)
 

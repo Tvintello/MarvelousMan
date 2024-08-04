@@ -1,4 +1,5 @@
 import discord
+from datetime import timedelta
 
 TOKEN: str = "token"
 APP_ID: str = "application id"
@@ -13,6 +14,13 @@ COLOR_DISCORD = discord.Colour(0x36393E)
 
 PREFIX: str = "$"
 
-roles = (("Приличный", discord.Permissions(permissions=629886015757889), COLOR_GREEN),
-         ("Невоспитанный", discord.Permissions(permissions=27216204471873), COLOR_RED))
+BAD_ROLE: str = "Невоспитанный"
+GOOD_ROLE: str = "Приличный"
+
+ROLES = ((GOOD_ROLE, discord.Permissions(permissions=629886015757889), COLOR_GREEN),
+         (BAD_ROLE, discord.Permissions(permissions=27216204471873), COLOR_RED))
+
+SWEAR_THRESHOLD = 3
+BAD_REPUTATION_DURATION = timedelta(hours=2)
+SWEAR_MUTE_DURATION = timedelta(minutes=30)
 

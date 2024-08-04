@@ -1,12 +1,18 @@
 from discord.ext import commands
 import discord
-from config import roles
+from config import ROLES
 
 
 class RoleManager:
     def __init__(self, bot: discord.ext.commands.Bot):
         self.bot = bot
-        self.available_roles = [role[0] for role in roles]
+        self.available_roles = [role[0] for role in ROLES]
+
+    def get_current_role(self, member: discord.Member):
+        for role in member.roles:
+            if role.name in self.available_roles:
+                return role
+        return discord.utils.get(self.bot.guilds[0].roles, name="@everyone")
 
     async def setup_role(self, role_name, permissions, color):
         exists = False
@@ -25,7 +31,7 @@ class RoleManager:
         )
 
     async def setup_roles(self):
-        for role in roles:
+        for role in ROLES:
             await self.setup_role(*role)
 
     async def set_role(self, member: discord.Member, role_name: str):
