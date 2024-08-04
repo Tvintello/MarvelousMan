@@ -28,7 +28,9 @@ class RoleManager:
         for role in roles:
             await self.setup_role(*role)
 
-    async def set_role(self, member: discord.Member, new_role: discord.Role):
+    async def set_role(self, member: discord.Member, role_name: str):
+        new_role = discord.utils.get(self.bot.guilds[0].roles, name=role_name)
+
         for role in await self.bot.guilds[0].fetch_roles():
             if role.name in self.available_roles:
                 await member.remove_roles(role)

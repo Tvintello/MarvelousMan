@@ -2,10 +2,11 @@ from discord.ext import commands
 import discord
 from scripts.support import get_json
 from random import choice
+from datetime import timedelta
 
 
 say_counter = {}
-phrases = get_json("scripts/phrases.json")
+phrases = get_json("./phrases.json")
 
 
 class UserCog(commands.Cog):
@@ -22,6 +23,7 @@ class UserCog(commands.Cog):
         say_counter[ctx.user] = say_counter.setdefault(ctx.user, 0) + 1
         print(say_counter)
         if say_counter[ctx.user] >= 6:
+            ctx.user.timeout_for(timedelta(minutes=5))
             await ctx.respond(choice(phrases["on_say"]))
         else:
             await ctx.respond(message)

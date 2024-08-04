@@ -3,7 +3,7 @@ import asyncio
 from scripts.support import get_json
 from discord.ext import commands
 
-phrases = get_json("scripts/phrases.json")
+phrases = get_json("./phrases.json")
 
 
 class TimerCog(commands.Cog):

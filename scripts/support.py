@@ -2,6 +2,9 @@ import json
 import discord
 import requests
 from bs4 import BeautifulSoup
+from timer import Timer
+from random import choice
+from datetime import timedelta
 
 
 def get_json(path):
@@ -17,7 +20,4 @@ def load_gif_from_tenor(link: str) -> discord.File:
     req2 = requests.get(lin).content
     print(req2[0:100])
     return discord.File(req2)
-
-
-
 
