@@ -2,6 +2,14 @@ import json
 import discord
 import requests
 from bs4 import BeautifulSoup
+from censure import Censor  # https://github.com/Priler/samurai/tree/main/censure
+
+censor_ru = Censor.get(lang="ru")
+
+
+def get_profanity(text):
+    info = censor_ru.clean_line(text)
+    return info
 
 
 def get_json(path):

@@ -14,6 +14,8 @@ COLOR_DISCORD = discord.Colour(0x36393E)
 
 PREFIX: str = "$"
 
+CHECK_BAD_WORDS = True
+
 BAD_ROLE: str = "Невоспитанный"
 GOOD_ROLE: str = "Приличный"
 
@@ -23,4 +25,6 @@ ROLES = ((GOOD_ROLE, discord.Permissions(permissions=629886015757889), COLOR_GRE
 SWEAR_THRESHOLD = 3
 BAD_REPUTATION_DURATION = timedelta(hours=2)
 SWEAR_MUTE_DURATION = timedelta(minutes=30)
-
+SAY_THRESHOLD = 10
+SAY_DURATION = timedelta(seconds=20)
+REPLACE_WORD = "АТАТА"

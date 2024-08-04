@@ -1,9 +1,9 @@
 from discord.ext import commands
 import discord
-from scripts.support import get_json
-from random import choice
+from scripts.support import get_json, get_profanity
+from random import choice, randint
 from scripts.role_manager import RoleManager
-from config import BAD_ROLE, BAD_REPUTATION_DURATION, SAY_THRESHOLD
+from config import BAD_ROLE, BAD_REPUTATION_DURATION, SAY_THRESHOLD, SAY_DURATION
 from scripts.general import GeneralFunctions
 from datetime import timedelta
 
@@ -18,6 +18,47 @@ class UserCog(commands.Cog):
         self.role_manager = RoleManager(self.bot)
         self.funcs = GeneralFunctions(self.bot)
 
+    @discord.slash_command(description="Выводит случайное число в данном диапазоне")
+    async def randomize(self, ctx: discord.commands.context.ApplicationContext, minimum: int, maximum: int):
+        number = randint(minimum, maximum)
+        await ctx.respond(f"Выпало число: {number}")
+
+    @discord.slash_command(description="Выводит случайное слово из предложенных")
+    async def randomize_words(self, ctx: discord.commands.context.ApplicationContext, words: str):
+        delimiters = (" ", ",", "|", "\\", "/", ".", ";")
+        new_words = []
+        word = ""
+        for let in words:
+            if let in delimiters:
+                if word:
+                    new_words.append(word)
+                    word = ""
+            else:
+                word += let
+        new_words.append(word)
+        print(new_words)
+        await ctx.respond(f"Выпало слово: {choice(new_words)}")
+
+    @discord.slash_command(description="Цензурит переданное сообщение")
+    async def censor(self, ctx: discord.commands.context.ApplicationContext, message: str):
+        bad_words = get_profanity(message)
+        new_words = []
+        for word in bad_words[3]:
+            word = word[:len(word) // 2] + "#" * (len(word) - len(word) // 2)
+            new_words.append(word)
+
+        words = bad_words[0].split("[beep]")
+        count = 0
+        content = ""
+        for word in words:
+            if word:
+                content += word
+            else:
+                content += new_words[count]
+                count += 1
+
+        await ctx.respond(f"**{ctx.user.display_name}**: {content}")
+
     @discord.slash_command(description="Удаляет твои сообщения в этом канале")
     async def clear_me(self, ctx: discord.commands.context.ApplicationContext, limit=100):
         length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: m.author == ctx.author))
@@ -25,12 +66,16 @@ class UserCog(commands.Cog):
 
     @discord.slash_command(description="Заставляет бота сказать то, что ты ему скажешь")
     async def say(self, ctx: discord.commands.context.ApplicationContext, message):
+        def reset_say_counter():
+            say_counter[ctx.user] = 0
+            print("RESET SAY")
+
         say_counter[ctx.user] = say_counter.setdefault(ctx.user, 0) + 1
+        await self.funcs.reset_timer(SAY_DURATION, reset_say_counter, ctx.user, "say")
         if say_counter[ctx.user] >= SAY_THRESHOLD:
             # await ctx.user.timeout_for(timedelta(minutes=5))
             await self.funcs.decrease_reputation(BAD_REPUTATION_DURATION, ctx.user)
             await ctx.respond(choice(phrases["on_say"]))
-            say_counter[ctx.user] = 0
         elif self.role_manager.get_current_role(ctx.user).name == BAD_ROLE:
             await ctx.respond(choice(phrases["on_bad_say"]))
         else:

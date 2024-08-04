@@ -1,16 +1,10 @@
 import discord
 
-from config import TOKEN, PREFIX, BAD_REPUTATION_DURATION, SWEAR_MUTE_DURATION, SWEAR_THRESHOLD, GOOD_ROLE
-from censure import Censor  # https://github.com/Priler/samurai/tree/main/censure
+from config import (TOKEN, PREFIX, BAD_REPUTATION_DURATION, SWEAR_MUTE_DURATION,
+                    SWEAR_THRESHOLD, GOOD_ROLE, CHECK_BAD_WORDS)
 from scripts.role_manager import RoleManager
 from scripts.general import GeneralFunctions
-
-censor_ru = Censor.get(lang="ru")
-
-
-def get_profanity(text):
-    info = censor_ru.clean_line(text)
-    return info[3]
+from scripts.support import get_profanity
 
 
 def run():
@@ -39,12 +33,19 @@ def run():
         if message.author == bot.user:
             return
 
-        if get_profanity(message.content):
-            await funcs.on_swear(message)
+        bad_words = get_profanity(message.content)
+
+        if bad_words[3] and CHECK_BAD_WORDS:
+            funcs.bad_counter[message.author] = funcs.bad_counter.setdefault(message.author, 0) + 1
             if funcs.bad_counter[message.author] >= SWEAR_THRESHOLD:
+                await funcs.mute_member(message, SWEAR_MUTE_DURATION * (funcs.bad_counter[message.author] - 2))
                 await funcs.decrease_reputation(BAD_REPUTATION_DURATION * (funcs.bad_counter[message.author] - 2),
                                                 message.author)
-                await funcs.mute_member(message, SWEAR_MUTE_DURATION * (funcs.bad_counter[message.author] - 2))
+            else:
+                await funcs.on_swear(message)
+
+            await message.channel.send(f"{message.author.mention} сказал: {bad_words[0].replace("[beep]", "АТАТА")}")
+            await message.delete()
             return
 
     @bot.event

@@ -18,22 +18,21 @@ class GeneralFunctions:
         self.role_manager = RoleManager(self.bot)
 
     async def on_swear(self, message):
-        self.bad_counter[message.author] = self.bad_counter.setdefault(message.author, 0) + 1
-        await message.channel.send(choice(phrases["on_swear"]))
+        await message.reply(choice(phrases["on_swear"]))
 
     async def on_mute_ended(self, message, phrase):
-        await message.channel.send(f"{message.author.mention} {phrase}")
+        await message.reply(phrase)
 
     async def mute_member(self, message, duration):
         async def launch_on_mute_ended():
             await self.on_mute_ended(message, choice(phrases["on_mute_end"]))
 
-        # await message.author.timeout_for(mute_duration)
-        await message.channel.send(choice(phrases["on_mute"]))
-        if self.timers[message.author] and not self.timers[message.author].get("mute"):
+        # await message.author.timeout_for(duration)
+        await message.reply(choice(phrases["on_mute"]))
+        if self.timers.get(message.author) and not self.timers[message.author].get("mute"):
             self.timers[message.author]["mute"] = Timer(duration, launch_on_mute_ended)
             await self.timers[message.author]["mute"].start()
-        elif not self.timers[message.author]:
+        elif not self.timers.get(message.author):
             self.timers[message.author] = {}
 
     async def retrieve_reputation(self, member: discord.Member):
@@ -45,14 +44,17 @@ class GeneralFunctions:
         async def launch_retrieve_reputation():
             await self.retrieve_reputation(user)
 
-        if self.timers.get(user) and self.timers[user].get("reputation"):
-            await self.timers[user]["reputation"].stop()
+        await self.reset_timer(duration, launch_retrieve_reputation, user, "reputation")
+        await self.role_manager.set_role(user, BAD_ROLE)
+
+    async def reset_timer(self, duration, func, user, timer_name):
+        if self.timers.get(user) and self.timers[user].get(timer_name):
+            await self.timers[user][timer_name].stop()
         else:
             self.timers[user] = {}
 
-        await self.role_manager.set_role(user, BAD_ROLE)
-        self.timers[user]["reputation"] = Timer(duration, launch_retrieve_reputation)
-        await self.timers[user]["reputation"].start()
+        self.timers[user][timer_name] = Timer(duration, func)
+        await self.timers[user][timer_name].start()
 
 
 def setup(bot):
