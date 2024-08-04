@@ -2,12 +2,11 @@ import discord
 
 from config import TOKEN, PREFIX, COLOR_GREEN
 from censure import Censor  # https://github.com/Priler/samurai/tree/main/censure
-from scripts.support import get_json
 from scripts.role_manager import RoleManager
 from scripts.general import GeneralFunctions
+from datetime import timedelta
 
 censor_ru = Censor.get(lang="ru")
-phrases = get_json("phrases.json")
 
 
 def get_profanity(text):
@@ -16,9 +15,7 @@ def get_profanity(text):
 
 
 def run():
-    intents = discord.Intents.default()
-    intents.message_content = True
-    bot = discord.Bot(intents=intents, prefix=PREFIX)
+    bot = discord.Bot(intents=discord.Intents.all(), prefix=PREFIX)
     role_manager = RoleManager(bot)
     funcs = GeneralFunctions(bot)
 
@@ -46,11 +43,15 @@ def run():
         if get_profanity(message.content):
             await funcs.on_swear(message)
             if funcs.bad_counter[message.author] >= 3:
-                await funcs.decrease_reputation(message)
-                await funcs.mute_member(message)
+                await funcs.decrease_reputation(message, timedelta(hours=2 * (funcs.bad_counter[message.author] - 2)))
+                await funcs.mute_member(message, timedelta(minutes=30 * (funcs.bad_counter[message.author] - 2)))
             return
         elif not message.content.startswith("/"):
             await message.channel.send(message.content)
+
+    @bot.event
+    async def on_member_join(member: discord.Member):
+        await member.add_roles(discord.utils.get(bot.guilds[0].roles, name="Приличный"))
 
     bot.run(TOKEN)
 

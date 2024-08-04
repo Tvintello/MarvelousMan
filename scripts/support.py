@@ -2,9 +2,6 @@ import json
 import discord
 import requests
 from bs4 import BeautifulSoup
-from timer import Timer
-from random import choice
-from datetime import timedelta
 
 
 def get_json(path):
