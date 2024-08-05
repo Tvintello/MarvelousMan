@@ -39,8 +39,7 @@ def run():
             funcs.bad_counter[message.author] = funcs.bad_counter.setdefault(message.author, 0) + 1
             if funcs.bad_counter[message.author] >= SWEAR_THRESHOLD:
                 await funcs.mute_member(message, SWEAR_MUTE_DURATION * (funcs.bad_counter[message.author] - 2))
-                await funcs.decrease_reputation(BAD_REPUTATION_DURATION * (funcs.bad_counter[message.author] - 2),
-                                                message.author)
+                await funcs.decrease_reputation(message, BAD_REPUTATION_DURATION * (funcs.bad_counter[message.author] - 2))
             else:
                 await funcs.on_swear(message)
 

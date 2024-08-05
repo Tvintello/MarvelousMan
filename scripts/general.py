@@ -35,17 +35,17 @@ class GeneralFunctions:
         elif not self.timers.get(message.author):
             self.timers[message.author] = {}
 
-    async def retrieve_reputation(self, member: discord.Member):
-        self.bad_counter[member] = 0
-        await self.role_manager.set_role(member, GOOD_ROLE)
-        print(f"RESET BAD COUNTER: {self.bad_counter}")
+    async def retrieve_reputation(self, message: discord.Message):
+        self.bad_counter[message.author] = 0
+        await self.role_manager.set_role(message.author, GOOD_ROLE)
+        await message.channel.send(f"{message.author.mention} {choice(phrases["on_retrieve_reputation"])}")
 
-    async def decrease_reputation(self, duration, user):
+    async def decrease_reputation(self, message: discord.Message, duration):
         async def launch_retrieve_reputation():
-            await self.retrieve_reputation(user)
+            await self.retrieve_reputation(message)
 
-        await self.reset_timer(duration, launch_retrieve_reputation, user, "reputation")
-        await self.role_manager.set_role(user, BAD_ROLE)
+        await self.reset_timer(duration, launch_retrieve_reputation, message.author, "reputation")
+        await self.role_manager.set_role(message.author, BAD_ROLE)
 
     async def reset_timer(self, duration, func, user, timer_name):
         if self.timers.get(user) and self.timers[user].get(timer_name):

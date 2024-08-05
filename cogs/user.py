@@ -3,8 +3,9 @@ import discord
 from scripts.support import get_json, get_profanity
 from random import choice, randint
 from scripts.role_manager import RoleManager
-from config import BAD_ROLE, BAD_REPUTATION_DURATION, SAY_THRESHOLD, SAY_DURATION
+from config import BAD_ROLE, BAD_REPUTATION_DURATION, SAY_THRESHOLD, SAY_DURATION, Colors
 from scripts.general import GeneralFunctions
+import re
 from datetime import timedelta
 
 
@@ -38,6 +39,16 @@ class UserCog(commands.Cog):
         new_words.append(word)
         print(new_words)
         await ctx.respond(f"Выпало слово: {choice(new_words)}")
+
+    @discord.slash_command(description="Устанавливает косметическую роль, которая не выполняет никаких функций. "
+                                       "Нужна для смены цвета ника")
+    async def set_cosmetic_role(self, ctx: discord.commands.context.ApplicationContext, color: str, name: str):
+        if not (color.upper() in Colors.__members__.keys()):
+            await ctx.respond("Я не знаю такого цвета, извини")
+            return
+
+        await self.role_manager.set_cosmetic_role(ctx.user, name, Colors.__members__[color.upper()].value)
+        await ctx.respond(f"По просьбе {ctx.user.mention} я поставил новую косметическую роль")
 
     @discord.slash_command(description="Цензурит переданное сообщение")
     async def censor(self, ctx: discord.commands.context.ApplicationContext, message: str):
