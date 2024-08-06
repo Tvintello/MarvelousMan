@@ -3,9 +3,9 @@ import discord
 from scripts.support import get_json, get_profanity
 from random import choice, randint
 from scripts.role_manager import RoleManager
-from config import BAD_ROLE, BAD_REPUTATION_DURATION, SAY_THRESHOLD, SAY_DURATION, Colors
+from config import BAD_ROLE, BAD_REPUTATION_DURATION, SAY_THRESHOLD, SAY_DURATION
 from scripts.general import GeneralFunctions
-import re
+import asyncio
 from datetime import timedelta
 
 
@@ -43,12 +43,15 @@ class UserCog(commands.Cog):
     @discord.slash_command(description="Устанавливает косметическую роль, которая не выполняет никаких функций. "
                                        "Нужна для смены цвета ника")
     async def set_cosmetic_role(self, ctx: discord.commands.context.ApplicationContext, color: str, name: str):
-        if not (color.upper() in Colors.__members__.keys()):
+        await ctx.response.defer()
+        try:
+            color = getattr(discord.Colour, color)
+        except KeyError:
             await ctx.respond("Я не знаю такого цвета, извини")
             return
 
-        await self.role_manager.set_cosmetic_role(ctx.user, name, Colors.__members__[color.upper()].value)
-        await ctx.respond(f"По просьбе {ctx.user.mention} я поставил новую косметическую роль")
+        await self.role_manager.set_cosmetic_role(ctx.user, name, color())
+        await ctx.followup.send(f"По просьбе {ctx.user.mention} я поставил новую косметическую роль")
 
     @discord.slash_command(description="Цензурит переданное сообщение")
     async def censor(self, ctx: discord.commands.context.ApplicationContext, message: str):
@@ -72,8 +75,9 @@ class UserCog(commands.Cog):
 
     @discord.slash_command(description="Удаляет твои сообщения в этом канале")
     async def clear_me(self, ctx: discord.commands.context.ApplicationContext, limit=100):
+        await ctx.response.defer()
         length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: m.author == ctx.author))
-        await ctx.respond(f"Я очистил **{length}** сообщений *{ctx.author}*")
+        await ctx.followup.send(f"Я очистил **{length}** сообщений *{ctx.author}*")
 
     @discord.slash_command(description="Заставляет бота сказать то, что ты ему скажешь")
     async def say(self, ctx: discord.commands.context.ApplicationContext, message):
@@ -84,7 +88,7 @@ class UserCog(commands.Cog):
         say_counter[ctx.user] = say_counter.setdefault(ctx.user, 0) + 1
         await self.funcs.reset_timer(SAY_DURATION, reset_say_counter, ctx.user, "say")
         if say_counter[ctx.user] >= SAY_THRESHOLD:
-            # await ctx.user.timeout_for(timedelta(minutes=5))
+            await ctx.user.timeout_for(timedelta(minutes=5))
             await self.funcs.decrease_reputation(BAD_REPUTATION_DURATION, ctx.user)
             await ctx.respond(choice(phrases["on_say"]))
         elif self.role_manager.get_current_role(ctx.user).name == BAD_ROLE:

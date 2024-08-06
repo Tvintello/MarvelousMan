@@ -9,22 +9,23 @@ class AdminCog(commands.Cog):
     @discord.slash_command(description="Удаляет историю канала, можно настроить чьи сообщения удалить")
     @commands.has_permissions(administrator=True)
     async def clear(self, ctx: discord.commands.context.ApplicationContext, whose: str = "all", limit=100):
+        await ctx.response.defer()
         if whose == "all":
             length = len(await ctx.channel.purge(limit=int(limit)))
-            await ctx.respond(f"Я очистил **{length}** улик ваших деяний")
+            await ctx.followup.send(f"Я очистил **{length}** улик ваших деяний")
         elif whose == "bot":
             length = len(await ctx.channel.purge(limit=int(limit), check=self.is_bot))
-            await ctx.respond(f"Я очистил **{length}** своих сообщений")
+            await ctx.followup.send(f"Я очистил **{length}** своих сообщений")
         else:
             for mem in self.bot.get_all_members():
                 if mem.name.lower() == whose.lower():
                     whose = mem
                     break
             else:
-                await ctx.respond(f"На этом сервере нет *{whose}*")
+                await ctx.followup.send(f"На этом сервере нет *{whose}*")
                 return
             length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_member(m, whose)))
-            await ctx.respond(f"Я очистил **{length}** сообщений *{whose}*")
+            await ctx.followup.send(f"Я очистил **{length}** сообщений *{whose}*")
 
     def is_bot(self, message) -> bool:
         return message.author == self.bot.user

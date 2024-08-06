@@ -1,15 +1,17 @@
 import discord
 
 from config import (TOKEN, PREFIX, BAD_REPUTATION_DURATION, SWEAR_MUTE_DURATION,
-                    SWEAR_THRESHOLD, GOOD_ROLE, CHECK_BAD_WORDS)
+                    SWEAR_THRESHOLD, GOOD_ROLE, CHECK_BAD_WORDS, MAIN_CHANNEL_ID,
+                    NEW_DAY_NOTIFICATION)
 from scripts.role_manager import RoleManager
 from scripts.general import GeneralFunctions
-from scripts.support import get_profanity
+from scripts.support import get_profanity, get_phrase, get_holiday
 from datetime import datetime, timedelta
 from scripts.timer import Timer
 
 
 timers = {}
+main_channel = None
 
 
 def run():
@@ -19,15 +21,18 @@ def run():
 
     @bot.event
     async def on_connect():
+        global main_channel
         bot.load_extension("cogs.admin")
         bot.load_extension("cogs.user")
         bot.load_extension("cogs.timer")
         await bot.sync_commands()
 
+        main_channel = bot.get_channel(MAIN_CHANNEL_ID)
+
     @bot.event
     async def on_ready():
         await role_manager.setup_roles()
-        print(bot.get_all_channels())
+
         timers["minute"] = Timer(timedelta(minutes=1), every_minute, repeat=True)
         await timers["minute"].start()
 
@@ -38,14 +43,12 @@ def run():
 
     async def every_minute():
         if not ("hour" in timers.keys()) and int(datetime.now().strftime("%M")) == 0:
-            print("Threshold")
             timers["hour"] = Timer(timedelta(hours=1), every_hour, repeat=True)
             await timers["hour"].start()
 
     async def every_hour():
-        if int(datetime.now().strftime("%H")) == 7:
-            print("HOUR", int(datetime.now().strftime("%S")))
-            # send phrase
+        if int(datetime.now().strftime("%H")) == 7 and NEW_DAY_NOTIFICATION:
+            await main_channel.send(f"{get_phrase("on_new_day")} {get_holiday()}")
 
     @bot.event
     async def on_message(message: discord.Message) -> None:

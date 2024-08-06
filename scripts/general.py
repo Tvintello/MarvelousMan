@@ -27,7 +27,10 @@ class GeneralFunctions:
         async def launch_on_mute_ended():
             await self.on_mute_ended(message, choice(phrases["on_mute_end"]))
 
-        # await message.author.timeout_for(duration)
+        try:
+            await message.author.timeout_for(duration)
+        except discord.Forbidden:
+            pass
         await message.reply(choice(phrases["on_mute"]))
         if self.timers.get(message.author) and not self.timers[message.author].get("mute"):
             self.timers[message.author]["mute"] = Timer(duration, launch_on_mute_ended)

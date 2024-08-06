@@ -14,8 +14,6 @@ COLOR_DISCORD = discord.Colour(0x36393E)
 
 PREFIX: str = "$"
 
-CHECK_BAD_WORDS = True
-
 BAD_ROLE: str = "Невоспитанный"
 GOOD_ROLE: str = "Приличный"
 
@@ -28,3 +26,7 @@ SWEAR_MUTE_DURATION = timedelta(minutes=30)
 SAY_THRESHOLD = 10
 SAY_DURATION = timedelta(seconds=20)
 REPLACE_WORD = "АТАТА"
+MAIN_CHANNEL_ID = integer
+
+NEW_DAY_NOTIFICATION = True
+CHECK_BAD_WORDS = True
