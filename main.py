@@ -5,6 +5,11 @@ from config import (TOKEN, PREFIX, BAD_REPUTATION_DURATION, SWEAR_MUTE_DURATION,
 from scripts.role_manager import RoleManager
 from scripts.general import GeneralFunctions
 from scripts.support import get_profanity
+from datetime import datetime, timedelta
+from scripts.timer import Timer
+
+
+timers = {}
 
 
 def run():
@@ -22,11 +27,25 @@ def run():
     @bot.event
     async def on_ready():
         await role_manager.setup_roles()
+        print(bot.get_all_channels())
+        timers["minute"] = Timer(timedelta(minutes=1), every_minute, repeat=True)
+        await timers["minute"].start()
 
         for role in await bot.guilds[0].fetch_roles():
             if role.name == GOOD_ROLE:
                 for member in bot.guilds[0].members:
                     await member.add_roles()
+
+    async def every_minute():
+        if not ("hour" in timers.keys()) and int(datetime.now().strftime("%M")) == 0:
+            print("Threshold")
+            timers["hour"] = Timer(timedelta(hours=1), every_hour, repeat=True)
+            await timers["hour"].start()
+
+    async def every_hour():
+        if int(datetime.now().strftime("%H")) == 7:
+            print("HOUR", int(datetime.now().strftime("%S")))
+            # send phrase
 
     @bot.event
     async def on_message(message: discord.Message) -> None:

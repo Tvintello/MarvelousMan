@@ -19,7 +19,10 @@ class AdminCog(commands.Cog):
             for mem in self.bot.get_all_members():
                 if mem.name.lower() == whose.lower():
                     whose = mem
-            print(whose)
+                    break
+            else:
+                await ctx.respond(f"На этом сервере нет *{whose}*")
+                return
             length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_member(m, whose)))
             await ctx.respond(f"Я очистил **{length}** сообщений *{whose}*")
 
