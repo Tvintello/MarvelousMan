@@ -44,6 +44,7 @@ def run():
                         await member.add_roles(role)
 
     async def every_minute():
+        await main_channel.send(str(funcs.timers()))
         if not ("hour" in timers.keys()) and int(datetime.now().strftime("%M")) == 0:
             timers["hour"] = Timer(timedelta(hours=1), every_hour, repeat=True)
             await timers["hour"].start()

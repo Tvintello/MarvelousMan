@@ -1,5 +1,6 @@
 from discord.ext import commands
 import discord
+from config import MAIN_CHANNEL_ID
 
 
 class AdminCog(commands.Cog):
@@ -10,22 +11,25 @@ class AdminCog(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def clear(self, ctx: discord.commands.context.ApplicationContext, whose: str = "all", limit=100):
         await ctx.response.defer()
+        main_channel = self.bot.get_channel(MAIN_CHANNEL_ID)
         if whose == "all":
             length = len(await ctx.channel.purge(limit=int(limit)))
-            await ctx.followup.send(f"Я очистил **{length}** улик ваших деяний")
+            await main_channel.send(f"Я очистил **{length}** улик ваших деяний")
         elif whose == "bot":
             length = len(await ctx.channel.purge(limit=int(limit), check=self.is_bot))
-            await ctx.followup.send(f"Я очистил **{length}** своих сообщений")
+            await main_channel.send(f"Я очистил **{length}** своих сообщений")
         else:
             for mem in self.bot.get_all_members():
                 if mem.name.lower() == whose.lower():
                     whose = mem
                     break
             else:
-                await ctx.followup.send(f"На этом сервере нет *{whose}*")
+                await main_channel.send(f"На этом сервере нет *{whose}*")
                 return
             length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_member(m, whose)))
-            await ctx.followup.send(f"Я очистил **{length}** сообщений *{whose}*")
+            await main_channel.send(f"Я очистил **{length}** сообщений *{whose}*")
+
+        await ctx.followup.send()
 
     def is_bot(self, message) -> bool:
         return message.author == self.bot.user
