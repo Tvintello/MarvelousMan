@@ -2,7 +2,7 @@ import discord
 
 from config import (TOKEN, PREFIX, BAD_REPUTATION_DURATION, SWEAR_MUTE_DURATION,
                     SWEAR_THRESHOLD, GOOD_ROLE, CHECK_BAD_WORDS, MAIN_CHANNEL_ID,
-                    NEW_DAY_NOTIFICATION)
+                    NEW_DAY_NOTIFICATION, BAD_ROLE, BOT_NAME)
 from scripts.role_manager import RoleManager
 from scripts.general import GeneralFunctions
 from scripts.support import get_profanity, get_phrase, get_holiday
@@ -38,8 +38,10 @@ def run():
 
         for role in await bot.guilds[0].fetch_roles():
             if role.name == GOOD_ROLE:
-                for member in bot.guilds[0].members:
-                    await member.add_roles()
+                for member in bot.get_all_members():
+                    if (not member.get_role(role.id) and not (BAD_ROLE in list(map(lambda x: x.name, member.roles)))
+                            and member.name != BOT_NAME):
+                        await member.add_roles(role)
 
     async def every_minute():
         if not ("hour" in timers.keys()) and int(datetime.now().strftime("%M")) == 0:

@@ -27,6 +27,7 @@ SAY_THRESHOLD = 10
 SAY_DURATION = timedelta(seconds=20)
 REPLACE_WORD = "АТАТА"
 MAIN_CHANNEL_ID = integer
+BOT_NAME = "Name"
 
 NEW_DAY_NOTIFICATION = True
 CHECK_BAD_WORDS = True
