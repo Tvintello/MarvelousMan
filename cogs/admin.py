@@ -31,13 +31,13 @@ class AdminCog(commands.Cog):
         await ctx.followup.send()
 
     def is_bot(self, message, command_id) -> bool:
-        return message.author == self.bot.user and command_id != message.id
+        return message and message.author == self.bot.user and command_id != message.id
 
     def is_member(self, message: discord.Message, member, command_id) -> bool:
-        return message.author == member and command_id != message.id
+        return message and  message.author == member and command_id != message.id
 
     def is_message(self, message: discord.Message, command_id):
-        return message.id != command_id
+        return message and message.id != command_id
 
     @discord.slash_command(description="Убирает мут с участника")
     @commands.has_permissions(administrator=True)
