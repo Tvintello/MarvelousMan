@@ -71,7 +71,7 @@ class UserCog(commands.Cog):
             else:
                 content.append(word)
 
-        await ctx.followup.send(f"**{ctx.user.display_name}**: {content}")
+        await ctx.followup.send(f"**{ctx.user.display_name}**: {" ".join(content)}")
 
     @discord.slash_command(description="Удаляет твои сообщения в этом канале")
     async def clear_me(self, ctx: discord.commands.context.ApplicationContext, limit=100):
