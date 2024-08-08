@@ -54,25 +54,24 @@ class UserCog(commands.Cog):
 
     @discord.slash_command(description="Цензурит переданное сообщение")
     async def censor(self, ctx: discord.commands.context.ApplicationContext, message: str):
+        await ctx.response.defer()
         bad_words = get_profanity(message)
         new_words = []
         for word in bad_words[3]:
             word = word[:len(word) // 2] + "#" * (len(word) - len(word) // 2)
             new_words.append(word)
 
-        words = bad_words[0].split("[beep]")
+        words = bad_words[0].split()
         count = 0
-        content = ""
-        print("Before:", new_words)
+        content = []
         for word in words:
-            if word:
-                content += word
-            else:
-                content += new_words[count]
-                print(count, len(new_words), len(words))
+            if word == "[beep]":
+                content.append(new_words[count])
                 count += 1
+            else:
+                content.append(word)
 
-        await ctx.respond(f"**{ctx.user.display_name}**: {content}")
+        await ctx.followup.send(f"**{ctx.user.display_name}**: {content}")
 
     @discord.slash_command(description="Удаляет твои сообщения в этом канале")
     async def clear_me(self, ctx: discord.commands.context.ApplicationContext, limit=100):
