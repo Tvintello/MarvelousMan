@@ -13,10 +13,10 @@ class AdminCog(commands.Cog):
         await ctx.response.defer()
         main_channel = self.bot.get_channel(MAIN_CHANNEL_ID)
         if whose == "all":
-            length = len(await ctx.channel.purge(limit=int(limit)))
+            length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_message(m, ctx.message.id)))
             await main_channel.send(f"Я очистил **{length}** улик ваших деяний")
         elif whose == "bot":
-            length = len(await ctx.channel.purge(limit=int(limit), check=self.is_bot))
+            length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_bot(m, ctx.message.id)))
             await main_channel.send(f"Я очистил **{length}** своих сообщений")
         else:
             for mem in self.bot.get_all_members():
@@ -26,17 +26,18 @@ class AdminCog(commands.Cog):
             else:
                 await main_channel.send(f"На этом сервере нет *{whose}*")
                 return
-            length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_member(m, whose)))
+            length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_member(m, whose, ctx.message.id)))
             await main_channel.send(f"Я очистил **{length}** сообщений *{whose}*")
-
         await ctx.followup.send()
 
-    def is_bot(self, message) -> bool:
-        return message.author == self.bot.user
+    def is_bot(self, message, command_id) -> bool:
+        return message.author == self.bot.user and command_id != message.id
 
-    def is_member(self, message: discord.Message, member) -> bool:
-        print(message.type, message.content, message)
-        return message.author == member
+    def is_member(self, message: discord.Message, member, command_id) -> bool:
+        return message.author == member and command_id != message.id
+
+    def is_message(self, message: discord.Message, command_id):
+        return message.id != command_id
 
     @discord.slash_command(description="Убирает мут с участника")
     @commands.has_permissions(administrator=True)
