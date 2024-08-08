@@ -15,10 +15,10 @@ class AdminCog(commands.Cog):
         id_ = main_channel.last_message_id
         if whose == "all":
             length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_message(m, id_)))
-            await main_channel.send(f"Я очистил **{length}** улик ваших деяний")
+            await ctx.followup.send(f"Я очистил **{length}** улик ваших деяний")
         elif whose == "bot":
             length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_bot(m, id_)))
-            await main_channel.send(f"Я очистил **{length}** своих сообщений")
+            await ctx.followup.send(f"Я очистил **{length}** своих сообщений")
         else:
             for mem in self.bot.get_all_members():
                 if mem.name.lower() == whose.lower():
@@ -28,8 +28,7 @@ class AdminCog(commands.Cog):
                 await main_channel.send(f"На этом сервере нет *{whose}*")
                 return
             length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_member(m, whose, id_)))
-            await main_channel.send(f"Я очистил **{length}** сообщений *{whose}*")
-        await ctx.followup.send()
+            await ctx.followup.send(f"Я очистил **{length}** сообщений *{whose}*")
 
     def is_bot(self, message, command_id) -> bool:
         return message.author == self.bot.user and command_id != message.id
