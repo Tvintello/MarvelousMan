@@ -9,15 +9,14 @@ class AdminCog(commands.Cog):
 
     @discord.slash_command(description="Удаляет историю канала, можно настроить чьи сообщения удалить")
     @commands.has_permissions(administrator=True)
-    async def clear(self, ctx: discord.Interaction, whose: str = "all", limit=100):
+    async def clear(self, ctx: discord.commands.context.ApplicationContext, whose: str = "all", limit=100):
         await ctx.response.defer()
         main_channel = self.bot.get_channel(MAIN_CHANNEL_ID)
-        id_ = await ctx.original_message()
         if whose == "all":
-            length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_message(m, id_)))
+            length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_message(m, ctx.message.id)))
             await main_channel.send(f"Я очистил **{length}** улик ваших деяний")
         elif whose == "bot":
-            length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_bot(m, id_)))
+            length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_bot(m, ctx.message.id)))
             await main_channel.send(f"Я очистил **{length}** своих сообщений")
         else:
             for mem in self.bot.get_all_members():
@@ -27,10 +26,8 @@ class AdminCog(commands.Cog):
             else:
                 await main_channel.send(f"На этом сервере нет *{whose}*")
                 return
-            length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_member(m, whose, id_)))
+            length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_member(m, whose, ctx.message.id)))
             await main_channel.send(f"Я очистил **{length}** сообщений *{whose}*")
-
-
 
         await ctx.followup.send()
 
