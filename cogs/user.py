@@ -5,7 +5,6 @@ from random import choice, randint
 from scripts.role_manager import RoleManager
 from config import BAD_ROLE, BAD_REPUTATION_DURATION, SAY_THRESHOLD, SAY_DURATION
 from scripts.general import GeneralFunctions
-import asyncio
 from datetime import timedelta
 
 
@@ -64,11 +63,13 @@ class UserCog(commands.Cog):
         words = bad_words[0].split("[beep]")
         count = 0
         content = ""
+        print("Before:", new_words)
         for word in words:
             if word:
                 content += word
             else:
                 content += new_words[count]
+                print(count, len(new_words), len(words))
                 count += 1
 
         await ctx.respond(f"**{ctx.user.display_name}**: {content}")
