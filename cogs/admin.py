@@ -34,7 +34,8 @@ class AdminCog(commands.Cog):
     def is_bot(self, message) -> bool:
         return message.author == self.bot.user
 
-    def is_member(self, message, member) -> bool:
+    def is_member(self, message: discord.Message, member) -> bool:
+        print(message.type, message.content, message)
         return message.author == member
 
     @discord.slash_command(description="Убирает мут с участника")
