@@ -25,7 +25,7 @@ class AdminCog(commands.Cog):
                     whose = mem
                     break
             else:
-                await main_channel.send(f"На этом сервере нет *{whose}*")
+                await ctx.followup.send(f"На этом сервере нет *{whose}*")
                 return
             length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_member(m, whose, id_)))
             await ctx.followup.send(f"Я очистил **{length}** сообщений *{whose}*")

@@ -3,7 +3,7 @@ import discord
 from scripts.support import get_json, get_profanity
 from random import choice, randint
 from scripts.role_manager import RoleManager
-from config import BAD_ROLE, BAD_REPUTATION_DURATION, SAY_THRESHOLD, SAY_DURATION
+from config import BAD_ROLE, BAD_REPUTATION_DURATION, SAY_THRESHOLD, SAY_DURATION, MAIN_CHANNEL_ID
 from scripts.general import GeneralFunctions
 from datetime import timedelta
 
@@ -76,7 +76,8 @@ class UserCog(commands.Cog):
     @discord.slash_command(description="Удаляет твои сообщения в этом канале")
     async def clear_me(self, ctx: discord.commands.context.ApplicationContext, limit=100):
         await ctx.response.defer()
-        length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: m.author == ctx.author))
+        id_ = self.bot.get_channel(MAIN_CHANNEL_ID).last_message_id
+        length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: m.author == ctx.author and m.id != id_))
         await ctx.followup.send(f"Я очистил **{length}** сообщений *{ctx.author}*")
 
     @discord.slash_command(description="Заставляет бота сказать то, что ты ему скажешь")
