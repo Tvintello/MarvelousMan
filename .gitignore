@@ -3,3 +3,4 @@ config.py
 /censure
 amvera.yml
 saves.json
+/__pycache__
