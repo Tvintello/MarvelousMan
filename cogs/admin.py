@@ -11,8 +11,7 @@ class AdminCog(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def clear(self, ctx: discord.commands.context.ApplicationContext, whose: str = "all", limit=100):
         await ctx.response.defer()
-        main_channel = self.bot.get_channel(MAIN_CHANNEL_ID)
-        id_ = main_channel.last_message_id
+        id_ = self.bot.get_channel(ctx.channel_id).last_message_id
         if whose == "all":
             length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: self.is_message(m, id_)))
             await ctx.followup.send(f"Я очистил **{length}** улик ваших деяний")

@@ -76,7 +76,7 @@ class UserCog(commands.Cog):
     @discord.slash_command(description="Удаляет твои сообщения в этом канале")
     async def clear_me(self, ctx: discord.commands.context.ApplicationContext, limit=100):
         await ctx.response.defer()
-        id_ = self.bot.get_channel(MAIN_CHANNEL_ID).last_message_id
+        id_ = self.bot.get_channel(ctx.channel_id).last_message_id
         length = len(await ctx.channel.purge(limit=int(limit), check=lambda m: m.author == ctx.author and m.id != id_))
         await ctx.followup.send(f"Я очистил **{length}** сообщений *{ctx.author}*")
 
