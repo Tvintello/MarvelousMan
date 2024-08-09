@@ -20,6 +20,11 @@ def get_json(path):
         return json.loads(f)
 
 
+def save(a) -> None:
+    with open("./saves.json", "w") as f:
+        json.dump(a, f)
+
+
 def get_holiday():
     link = "https://www.calend.ru/"
     req = requests.get(link)

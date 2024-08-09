@@ -5,9 +5,10 @@ from config import (TOKEN, PREFIX, BAD_REPUTATION_DURATION, SWEAR_MUTE_DURATION,
                     NEW_DAY_NOTIFICATION, BAD_ROLE, BOT_NAME)
 from scripts.role_manager import RoleManager
 from scripts.general import GeneralFunctions
-from scripts.support import get_profanity, get_phrase, get_holiday
+from scripts.support import get_profanity, get_phrase, get_holiday, save, get_json
 from datetime import datetime, timedelta
 from scripts.timer import Timer
+import ctypes
 
 
 timers = {}
@@ -33,6 +34,19 @@ def run():
     async def on_ready():
         await role_manager.setup_roles()
 
+        # LOADING TIMERS FROM JSON
+        # tims = get_json("saves.json")
+        # for key in tims:
+        #     member = discord.utils.get(bot.get_all_members(), id=key)
+        #     b = {}
+        #     for name in tims[key]:
+        #         time = tims[key][name][0]
+        #         func = ctypes.cast(tims[key][name][1], ctypes.py_object).value
+        #         print(func)
+        #         b[name] = Timer(time, func)
+        #     funcs.timers[member] = b
+        # print(funcs.timers)
+
         timers["minute"] = Timer(timedelta(minutes=1), every_minute, repeat=True)
         await timers["minute"].start()
 
@@ -44,7 +58,8 @@ def run():
                         await member.add_roles(role)
 
     async def every_minute():
-        await main_channel.send(str(funcs.timers()))
+        if int(datetime.now().strftime("%M")) % 10 == 0:
+            await funcs.save_funcs()
         if not ("hour" in timers.keys()) and int(datetime.now().strftime("%M")) == 0:
             timers["hour"] = Timer(timedelta(hours=1), every_hour, repeat=True)
             await timers["hour"].start()

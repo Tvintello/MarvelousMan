@@ -2,9 +2,10 @@ from discord.ext import commands
 import discord
 from scripts.timer import Timer
 from random import choice
-from scripts.support import get_json
+from scripts.support import get_json, save
 from scripts.role_manager import RoleManager
 from config import BAD_ROLE, GOOD_ROLE
+import inspect
 
 
 phrases = get_json("./phrases.json")
@@ -37,6 +38,7 @@ class GeneralFunctions:
             await self.timers[message.author]["mute"].start()
         elif not self.timers.get(message.author):
             self.timers[message.author] = {}
+        await self.save_funcs()
 
     async def retrieve_reputation(self, message: discord.Message):
         self.bad_counter[message.author] = 0
@@ -58,6 +60,18 @@ class GeneralFunctions:
 
         self.timers[user][timer_name] = Timer(duration, func)
         await self.timers[user][timer_name].start()
+        await self.save_funcs()
+
+    async def save_funcs(self):
+        a = {}
+        for key in self.timers:
+            b = {}
+            for name in self.timers[key]:
+                timer = self.timers[key][name]
+                b[name] = [timer.time.seconds, id(timer.func)]
+            a[key.id] = b
+        print(a)
+        save(a)
 
 
 def setup(bot):
