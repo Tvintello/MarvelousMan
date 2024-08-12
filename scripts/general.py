@@ -70,7 +70,6 @@ class GeneralFunctions:
                 timer = self.timers[key][name]
                 b[name] = [timer.time.seconds, id(timer.func)]
             a[key.id] = b
-        print(a)
         save(a)
 
 

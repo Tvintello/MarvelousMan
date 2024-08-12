@@ -8,7 +8,6 @@ from scripts.general import GeneralFunctions
 from scripts.support import get_profanity, get_phrase, get_holiday, save, get_json
 from datetime import datetime, timedelta
 from scripts.timer import Timer
-import ctypes
 
 
 timers = {}
@@ -19,6 +18,7 @@ def run():
     bot = discord.Bot(intents=discord.Intents.all(), prefix=PREFIX)
     role_manager = RoleManager(bot)
     funcs = GeneralFunctions(bot)
+    messages = []
 
     @bot.event
     async def on_connect():
@@ -59,12 +59,15 @@ def run():
 
     async def every_minute():
         if int(datetime.now().strftime("%M")) % 10 == 0:
+            print("10MINUTE: ", timers)
             await funcs.save_funcs()
         if not ("hour" in timers.keys()) and int(datetime.now().strftime("%M")) == 0:
+            print("TRANSITION", timers)
             timers["hour"] = Timer(timedelta(hours=1), every_hour, repeat=True)
             await timers["hour"].start()
 
     async def every_hour():
+        print("HOUR: ", timers)
         if int(datetime.now().strftime("%H")) == 7 and NEW_DAY_NOTIFICATION:
             await main_channel.send(f"{get_phrase("on_new_day")} {get_holiday()}")
 
@@ -72,6 +75,8 @@ def run():
     async def on_message(message: discord.Message) -> None:
         if message.author == bot.user:
             return
+
+        messages.append(message.content)
 
         bad_words = get_profanity(message.content)
 
