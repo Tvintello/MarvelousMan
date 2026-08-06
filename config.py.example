@@ -1,9 +1,18 @@
 import discord
 from datetime import timedelta
 
+# Main checkmarks
+NEW_DAY_NOTIFICATION = True
+CHECK_BAD_WORDS = True
+
+# Bot initialization
 TOKEN: str = "token"
 APP_ID: str = "application id"
+MAIN_CHANNEL_ID = integer
+BOT_NAME = "Name"
+PREFIX: str = "$" # Additional prefix for commands
 
+# Variable declaration
 # Colors
 COLOR_RED = discord.Colour.red()
 COLOR_BLUE = discord.Colour.blue()
@@ -12,8 +21,7 @@ COLOR_GREEN = discord.Colour.green()
 COLOR_YELLOW = discord.Colour.yellow()
 COLOR_DISCORD = discord.Colour(0x36393E)
 
-PREFIX: str = "$"
-
+# Punishment zone
 BAD_ROLE: str = "Невоспитанный"
 GOOD_ROLE: str = "Приличный"
 
@@ -26,8 +34,4 @@ SWEAR_MUTE_DURATION = timedelta(minutes=30)
 SAY_THRESHOLD = 10
 SAY_DURATION = timedelta(seconds=20)
 REPLACE_WORD = "АТАТА"
-MAIN_CHANNEL_ID = integer
-BOT_NAME = "Name"
 
-NEW_DAY_NOTIFICATION = True
-CHECK_BAD_WORDS = True
